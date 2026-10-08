@@ -56,7 +56,8 @@ jobs:
           cp ../shared/ui/index.html app/src/main/assets/index.html
           cp ../shared/ui/icon.png app/src/main/assets/icon.png
           mkdir -p app/src/main/assets/themes
-          cp -r ../shared/ui/themes app/src/main/assets/themes 2>/dev/null || cp ../shared/ui/themes/*.png app/src/main/assets/themes/ 2>/dev/null || true
+          cp -r ../shared/ui/themes/* app/src/main/assets/themes/ 2>/dev/null || cp ../shared/ui/themes/*.png app/src/main/assets/themes/ 2>/dev/null || true
+          if [ -d app/src/main/assets/themes/themes ]; then cp app/src/main/assets/themes/themes/*.png app/src/main/assets/themes/ 2>/dev/null || true; rm -rf app/src/main/assets/themes/themes; fi
       - run: chmod +x ./gradlew || true
       - run: |
           if [ ! -f ./gradlew ]; then gradle wrapper --gradle-version 8.7 || true; fi

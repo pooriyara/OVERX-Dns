@@ -16,6 +16,7 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <PublishSingleFile>false</PublishSingleFile>
