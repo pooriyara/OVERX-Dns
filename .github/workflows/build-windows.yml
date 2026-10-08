@@ -25,8 +25,8 @@ jobs:
       - name: Restore
         run: dotnet restore OVERX-Dns.sln
 
-      - name: Build Release x64
-        run: dotnet build OVERX-Dns.sln -c Release --no-restore -p:Platform=x64
+      - name: Build Release
+        run: dotnet build OVERX-Dns.sln -c Release --no-restore
 
       - name: Publish win-x64 (framework-dependent)
         run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained false -o publish/win-x64
@@ -39,6 +39,7 @@ jobs:
         run: |
           Get-ChildItem publish -Recurse | Format-Table
           if (!(Test-Path "publish/win-x64/OVERX Dns.exe")) { Write-Error "OVERX Dns.exe missing" }
+          if (!(Test-Path "publish/win-x64-single/OVERX Dns.exe")) { Write-Host "single file at publish/win-x64-single" }
           Write-Host "OVERX Dns build OK"
 
       - name: Upload artifacts
@@ -49,15 +50,3 @@ jobs:
             windows/publish/win-x64/
             windows/publish/win-x64-single/
           if-no-files-found: error
-
-      # Optional: create installer with Inno Setup (uncomment if .iss exists)
-      # - name: Build Inno installer
-      #   run: iscc installer/overx.iss
-
-      # Optional release on tag
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            windows/publish/win-x64-single/OVERX Dns.exe

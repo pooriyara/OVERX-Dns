@@ -3,23 +3,76 @@ name: Release
 on:
   push:
     tags: [ 'v*.*.*' ]
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
         description: 'Version tag (e.g. v1.0.0)'
         required: true
+        default: 'v1.0.0'
 
 jobs:
-  windows:
-    uses: ./.github/workflows/build-windows.yml
-  android:
-    uses: ./.github/workflows/build-android.yml
-
-  publish:
-    needs: [windows, android]
-    runs-on: ubuntu-latest
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore OVERX-Dns.sln
+      - run: dotnet build OVERX-Dns.sln -c Release --no-restore
+      - run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained false -o publish/win-x64
+      - run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64-single
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OVERX-Dns-Windows
+          path: |
+            windows/publish/win-x64/
+            windows/publish/win-x64-single/
+
+  build-android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle-wrapper.properties') }}
+      - run: |
+          mkdir -p app/src/main/assets
+          cp ../shared/ui/index.html app/src/main/assets/index.html
+          cp ../shared/ui/icon.png app/src/main/assets/icon.png
+          mkdir -p app/src/main/assets/themes
+          cp -r ../shared/ui/themes app/src/main/assets/themes 2>/dev/null || cp ../shared/ui/themes/*.png app/src/main/assets/themes/ 2>/dev/null || true
+      - run: chmod +x ./gradlew || true
+      - run: |
+          if [ ! -f ./gradlew ]; then gradle wrapper --gradle-version 8.7 || true; fi
+      - run: ./gradlew assembleDebug --stacktrace
+      - run: ./gradlew assembleRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OVERX-Dns-Android
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+
+  publish:
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -31,11 +84,11 @@ jobs:
           name: "OVERX Dns ${{ inputs.version || github.ref_name }}"
           body: |
             ## OVERX Dns ${{ inputs.version || github.ref_name }}
-            - Windows: `OVERX Dns.exe` (WebView2 + engine)
-            - Android: `app-release.apk` (WebView + VpnService, same icon on status bar)
-            - Shared UI: `shared/ui/index.html` — Gaming Mode removed, Logs added to bottom nav
-            - Renamed from OverlordDns → OVERX Dns
-            - Icon: OVERX X-in-circle (blue) used everywhere
+            - Windows: `OVERX Dns.exe` (WebView2 + engine, top-only hero with 4 themes, ring connect, mini-switches)
+            - Android: `app-release.apk` (WebView + VpnService, same icon on status bar, table Profiles)
+            - Shared UI: `shared/ui/index.html` — 4 theme photos full top hero, no toggle bar, ring icon connect (gray when off)
+            - Renamed OverlordDns → OVERX Dns (21x)
           files: |
             artifacts/OVERX-Dns-Windows*/**
             artifacts/OVERX-Dns-Android*/**
+          generate_release_notes: true

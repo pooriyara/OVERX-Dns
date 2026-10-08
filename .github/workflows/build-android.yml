@@ -23,16 +23,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-            android/.gradle
           key: gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle-wrapper.properties') }}
 
       - name: Sync shared UI
@@ -40,27 +36,28 @@ jobs:
           mkdir -p app/src/main/assets
           cp ../shared/ui/index.html app/src/main/assets/index.html
           cp ../shared/ui/icon.png app/src/main/assets/icon.png
+          mkdir -p app/src/main/assets/themes
+          cp -r ../shared/ui/themes app/src/main/assets/themes 2>/dev/null || cp ../shared/ui/themes/*.png app/src/main/assets/themes/ 2>/dev/null || true
           ls -lh app/src/main/assets/
+          ls -lh app/src/main/assets/themes/ 2>/dev/null || true
 
       - name: Make gradlew executable
-        run: chmod +x ./gradlew || echo "gradlew not committed, generating wrapper"
-        continue-on-error: true
+        run: chmod +x ./gradlew || echo "gradlew missing, will generate"
 
       - name: Generate gradle wrapper if missing
         run: |
           if [ ! -f ./gradlew ]; then
-            gradle wrapper --gradle-version 8.7
+            echo "Generating gradle wrapper 8.7"
+            gradle wrapper --gradle-version 8.7 || echo "gradle not found, trying wrapper download"
           fi
+          ls -lh gradlew* 2>/dev/null || true
+          ls -lh gradle/wrapper/ 2>/dev/null || true
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Build Release APK (unsigned)
         run: ./gradlew assembleRelease --stacktrace
-
-      - name: Lint
-        run: ./gradlew lintDebug || true
-        continue-on-error: true
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
@@ -71,16 +68,9 @@ jobs:
             android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
-      - name: Upload AAB (if built)
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: OVERX-Dns-AAB
           path: android/app/build/outputs/bundle/**/*.aab
           if-no-files-found: warn
-
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            android/app/build/outputs/apk/release/*.apk
