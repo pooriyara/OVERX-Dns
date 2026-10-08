@@ -28,14 +28,11 @@ jobs:
           dotnet-version: '8.0.x'
       - run: dotnet restore OVERX-Dns.sln
       - run: dotnet build OVERX-Dns.sln -c Release --no-restore
-      - run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained false -o publish/win-x64
       - run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64-single
       - uses: actions/upload-artifact@v4
         with:
           name: OVERX-Dns-Windows
-          path: |
-            windows/publish/win-x64/
-            windows/publish/win-x64-single/
+          path: windows/publish/win-x64-single/
 
   build-android:
     runs-on: ubuntu-latest
@@ -64,14 +61,14 @@ jobs:
       - run: chmod +x ./gradlew || true
       - run: |
           if [ ! -f ./gradlew ]; then gradle wrapper --gradle-version 8.7 || true; fi
-      - run: ./gradlew assembleDebug --stacktrace
       - run: ./gradlew assembleRelease --stacktrace
+      - run: |
+          cp app/build/outputs/apk/release/app-release-unsigned.apk "OVERX Dns.apk" || cp app/build/outputs/apk/release/*.apk "OVERX Dns.apk" || true
+          ls -lh "OVERX Dns.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: OVERX-Dns-Android
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            android/app/build/outputs/apk/release/*.apk
+          path: android/OVERX Dns.apk
 
   publish:
     needs: [build-windows, build-android]
@@ -80,23 +77,24 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Prepare release files (zip to avoid duplicate names)
+      - name: Prepare release files
         run: |
           ls -R artifacts || true
-          # Create zips for Windows publishes (framework-dependent and single-file)
-          if [ -d "artifacts/OVERX-Dns-Windows/win-x64" ]; then
-            (cd artifacts/OVERX-Dns-Windows/win-x64 && zip -r ../../../OVERX-Dns-Windows-win-x64.zip . ) || true
+          # Windows Portable zip — single file contains everything
+          if [ -d "artifacts/OVERX-Dns-Windows" ]; then
+            # artifact for single already contains exe directly
+            ls -lh "artifacts/OVERX-Dns-Windows" || true
+            (cd "artifacts/OVERX-Dns-Windows" && zip -r "../../OVERX Dns Portable.zip" . ) || true
           fi
-          if [ -d "artifacts/OVERX-Dns-Windows/win-x64-single" ]; then
-            # rename exe to avoid confusion before zipping
-            if [ -f "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX Dns.exe" ]; then
-              mv "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX Dns.exe" "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX-Dns-single.exe" || true
-            fi
-            (cd artifacts/OVERX-Dns-Windows/win-x64-single && zip -r ../../../OVERX-Dns-Windows-single.zip . ) || true
+          # Android APK already named correctly — copy to root for release
+          if [ -f "artifacts/OVERX-Dns-Android/OVERX Dns.apk" ]; then
+            cp "artifacts/OVERX-Dns-Android/OVERX Dns.apk" "./OVERX Dns.apk" || true
+          elif [ -f "artifacts/OVERX-Dns-Android/app-release-unsigned.apk" ]; then
+            cp "artifacts/OVERX-Dns-Android/app-release-unsigned.apk" "./OVERX Dns.apk" || true
           fi
-          ls -lh *.zip 2>/dev/null || true
+          ls -lh "OVERX Dns Portable.zip" "OVERX Dns.apk" 2>/dev/null || true
           ls -R artifacts || true
-      - run: ls -R artifacts; ls -lh *.zip 2>/dev/null || true
+      - run: ls -lh "OVERX Dns Portable.zip" "OVERX Dns.apk" 2>/dev/null || true; ls -R artifacts || true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -104,11 +102,11 @@ jobs:
           name: "OVERX Dns ${{ inputs.version || github.ref_name }}"
           body: |
             ## OVERX Dns ${{ inputs.version || github.ref_name }}
-            - Windows: `OVERX Dns.exe` (WebView2 + engine, top-only hero with 4 themes, ring connect, mini-switches)
-            - Android: `app-release.apk` (WebView + VpnService, same icon on status bar, table Profiles)
+            - Windows: `OVERX Dns Portable.zip` → `OVERX Dns.exe` portable (WebView2 + engine, single-file, no .NET needed)
+            - Android: `OVERX Dns.apk` (WebView + VpnService, same icon on status bar, table Profiles)
             - Shared UI: `shared/ui/index.html` — 4 theme photos full top hero, no toggle bar, ring icon connect (gray when off)
             - Renamed OverlordDns → OVERX Dns (21x)
           files: |
-            OVERX-Dns-Windows-*.zip
-            artifacts/OVERX-Dns-Android/**/*.apk
+            OVERX Dns Portable.zip
+            OVERX Dns.apk
           generate_release_notes: true

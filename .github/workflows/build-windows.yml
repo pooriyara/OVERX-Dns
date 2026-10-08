@@ -28,25 +28,19 @@ jobs:
       - name: Build Release
         run: dotnet build OVERX-Dns.sln -c Release --no-restore
 
-      - name: Publish win-x64 (framework-dependent)
-        run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained false -o publish/win-x64
-
-      - name: Publish win-x64 self-contained single-file
+      - name: Publish Windows Portable (self-contained single-file)
         run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64-single
 
       - name: Verify exe + icon
         shell: pwsh
         run: |
           Get-ChildItem publish -Recurse | Format-Table
-          if (!(Test-Path "publish/win-x64/OVERX Dns.exe")) { Write-Error "OVERX Dns.exe missing" }
-          if (!(Test-Path "publish/win-x64-single/OVERX Dns.exe")) { Write-Host "single file at publish/win-x64-single" }
-          Write-Host "OVERX Dns build OK"
+          if (!(Test-Path "publish/win-x64-single/OVERX Dns.exe")) { Write-Error "OVERX Dns.exe missing" }
+          Write-Host "OVERX Dns Portable build OK"
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OVERX-Dns-Windows
-          path: |
-            windows/publish/win-x64/
-            windows/publish/win-x64-single/
+          path: windows/publish/win-x64-single/
           if-no-files-found: error

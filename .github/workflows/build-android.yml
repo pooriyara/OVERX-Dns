@@ -55,24 +55,17 @@ jobs:
           ls -lh gradlew* 2>/dev/null || true
           ls -lh gradle/wrapper/ 2>/dev/null || true
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: Build Release APK (unsigned)
+      - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Upload APKs
+      - name: Rename APK to brand name
+        run: |
+          cp app/build/outputs/apk/release/app-release-unsigned.apk "OVERX Dns.apk" || cp app/build/outputs/apk/release/*.apk "OVERX Dns.apk" || true
+          ls -lh "OVERX Dns.apk"
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: OVERX-Dns-Android
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            android/app/build/outputs/apk/release/*.apk
+          path: android/OVERX Dns.apk
           if-no-files-found: error
-
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: OVERX-Dns-AAB
-          path: android/app/build/outputs/bundle/**/*.aab
-          if-no-files-found: warn
