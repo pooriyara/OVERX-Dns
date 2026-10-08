@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">OVERX Dns</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="notif_title">OVERX Dns Active</string>
+    <string name="notif_text">DNS routing via Cloudflare — tap to manage</string>
+    <string name="notif_channel">OVERX Dns VPN</string>
+    <string name="vpn_disconnect">Disconnect</string>
+    <string name="vpn_describe">OVERX Dns routes DNS queries over encrypted upstream (DoH/DoT) with local cache and split-DNS rules.</string>
+    <string name="apply">Apply</string>
+    <string name="clear">Clear</string>
+</resources>

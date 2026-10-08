@@ -1,0 +1,23 @@
+# Binaries
+bin/
+obj/
+publish/
+out/
+*.exe
+*.dll
+*.pdb
+*.apk
+*.aab
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
+.gradle/
+build/
+local.properties
+*.keystore
+*.jks
+# Node
+node_modules/
+# OS
+.DS_Store

@@ -1,0 +1,2 @@
+-keep class com.overxdns.app.** { *; }
+-dontwarn android.webkit.**

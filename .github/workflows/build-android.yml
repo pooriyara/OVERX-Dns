@@ -1,0 +1,86 @@
+name: Build Android
+
+on:
+  push:
+    branches: [ main, master, dev ]
+    paths: [ 'android/**', 'shared/**', '.github/workflows/build-android.yml' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+          key: gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle-wrapper.properties') }}
+
+      - name: Sync shared UI
+        run: |
+          mkdir -p app/src/main/assets
+          cp ../shared/ui/index.html app/src/main/assets/index.html
+          cp ../shared/ui/icon.png app/src/main/assets/icon.png
+          ls -lh app/src/main/assets/
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew || echo "gradlew not committed, generating wrapper"
+        continue-on-error: true
+
+      - name: Generate gradle wrapper if missing
+        run: |
+          if [ ! -f ./gradlew ]; then
+            gradle wrapper --gradle-version 8.7
+          fi
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build Release APK (unsigned)
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Lint
+        run: ./gradlew lintDebug || true
+        continue-on-error: true
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERX-Dns-Android
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload AAB (if built)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERX-Dns-AAB
+          path: android/app/build/outputs/bundle/**/*.aab
+          if-no-files-found: warn
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android/app/build/outputs/apk/release/*.apk

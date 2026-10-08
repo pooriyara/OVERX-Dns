@@ -1,0 +1,63 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ main, master, dev ]
+    paths: [ 'windows/**', 'shared/**', '.github/workflows/build-windows.yml' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore OVERX-Dns.sln
+
+      - name: Build Release x64
+        run: dotnet build OVERX-Dns.sln -c Release --no-restore -p:Platform=x64
+
+      - name: Publish win-x64 (framework-dependent)
+        run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained false -o publish/win-x64
+
+      - name: Publish win-x64 self-contained single-file
+        run: dotnet publish "OVERX-Dns/OVERX-Dns.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64-single
+
+      - name: Verify exe + icon
+        shell: pwsh
+        run: |
+          Get-ChildItem publish -Recurse | Format-Table
+          if (!(Test-Path "publish/win-x64/OVERX Dns.exe")) { Write-Error "OVERX Dns.exe missing" }
+          Write-Host "OVERX Dns build OK"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERX-Dns-Windows
+          path: |
+            windows/publish/win-x64/
+            windows/publish/win-x64-single/
+          if-no-files-found: error
+
+      # Optional: create installer with Inno Setup (uncomment if .iss exists)
+      # - name: Build Inno installer
+      #   run: iscc installer/overx.iss
+
+      # Optional release on tag
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            windows/publish/win-x64-single/OVERX Dns.exe

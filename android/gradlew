@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# Stub — CI will generate real wrapper via `gradle wrapper` if needed.
+# Local: ensure you have gradle 8.7 installed or run `gradle wrapper --gradle-version 8.7`
+echo "Delegating to gradle..."
+if command -v gradle >/dev/null 2>&1; then exec gradle "$@"
+else echo "Gradle not found. Install gradle 8.7 or let GitHub Action generate wrapper."; exit 1; fi

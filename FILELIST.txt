@@ -1,0 +1,28 @@
+OVERX Dns — ساختار فایل‌ها (File List)
+========================================
+assets/icon.png            — آیکون اصلی (1254) ارسالی شما
+assets/icon.ico            — ویندوز (16-256)
+assets/icon-32/192/512.png — اندازه‌های کمکی
+shared/ui/index.html       — قلب HTML (گیمینگ‌مود حذف، لاگ‌ها افزوده، 25KB)
+shared/ui/icon.png         — آیکون کنار HTML
+windows/OVERX-Dns.sln
+windows/OVERX-Dns/OVERX-Dns.csproj — .NET 8 + WebView2
+windows/OVERX-Dns/OVERXDns.cs      — موتور DNS (21× OVERX Dns) + nav با Logs
+windows/OVERX-Dns/HybridForm.cs    — wrapper WebView2 برای همین HTML
+windows/OVERX-Dns/ui/index.html
+windows/OVERX-Dns/Resources/icon.ico
+android/app/src/main/assets/index.html — کپی همین HTML
+android/app/src/main/assets/icon.png
+android/app/src/main/java/com/overxdns/app/MainActivity.kt
+android/app/src/main/java/com/overxdns/app/DnsVpnService.kt — نوتیف با همین آیکون بالای پرده
+android/app/src/main/java/com/overxdns/app/DnsEngine.kt
+android/app/src/main/java/com/overxdns/app/SettingsStore.kt
+android/app/src/main/res/mipmap-*/ic_launcher.png — همین آیکون
+android/app/src/main/res/drawable/ic_stat_overx.xml
+android/app/src/main/AndroidManifest.xml
+android/build.gradle / settings.gradle / gradle-wrapper.properties
+.github/workflows/build-windows.yml
+.github/workflows/build-android.yml
+.github/workflows/release.yml
+README.md / windows/README.md / android/README.md
+LICENSE / CHANGELOG.md / docs.md / sync-ui.sh

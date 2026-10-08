@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  windows:
+    uses: ./.github/workflows/build-windows.yml
+  android:
+    uses: ./.github/workflows/build-android.yml
+
+  publish:
+    needs: [windows, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - run: ls -R artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version || github.ref_name }}
+          name: "OVERX Dns ${{ inputs.version || github.ref_name }}"
+          body: |
+            ## OVERX Dns ${{ inputs.version || github.ref_name }}
+            - Windows: `OVERX Dns.exe` (WebView2 + engine)
+            - Android: `app-release.apk` (WebView + VpnService, same icon on status bar)
+            - Shared UI: `shared/ui/index.html` — Gaming Mode removed, Logs added to bottom nav
+            - Renamed from OverlordDns → OVERX Dns
+            - Icon: OVERX X-in-circle (blue) used everywhere
+          files: |
+            artifacts/OVERX-Dns-Windows*/**
+            artifacts/OVERX-Dns-Android*/**
