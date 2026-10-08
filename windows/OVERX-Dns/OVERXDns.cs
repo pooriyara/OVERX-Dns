@@ -760,7 +760,7 @@ class MainForm : Form
     static bool fa;
     int page;
     Panel bodyPanel, headerPanel, homePanel, settingsPanel, navPanel;
-    Button btnApply, btnClear, btnFlush, btnGear, btnLog, btnRules, btnHome, btnSettings;
+    Button btnApply, btnClear, btnFlush, btnGear, btnLog, btnRules, btnHome, btnSettings, btnLogs;
     Icon appIcon;
     static Color LOGBG = Color.FromArgb(12, 14, 20), LOGFG = Color.FromArgb(130, 235, 190),
                  HOVER = Color.FromArgb(54, 62, 88), PRESS = Color.FromArgb(72, 82, 114);
@@ -1112,7 +1112,8 @@ class MainForm : Form
         btnGear.Click += delegate { ManageDns(); };
         btnRules.Click += delegate { OpenRules(); };
         btnHome.Click += delegate { ShowPage(0); };
-        btnSettings.Click += delegate { ShowPage(1); };
+        btnLogs.Click += delegate { ShowPage(1); };
+        btnSettings.Click += delegate { ShowPage(2); };
         cbLang.SelectedIndexChanged += delegate
         {
             if (uiSync) return;

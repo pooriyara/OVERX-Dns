@@ -32,7 +32,7 @@ namespace OVERXDnsHybrid
 
             // Engine init - reuses same logic from OVERXDns.cs Router/Engine
             router = new Router();
-            engine = new Engine(router);
+            engine = new Engine();
 
             // WebView
             web = new WebView2();
@@ -120,7 +120,7 @@ namespace OVERXDnsHybrid
                 Log("Applying OVERX Dns ...");
                 // System DNS set is handled in original MainForm.DoApply - we replicate minimal
                 // For demo we just start Engine listener on 53
-                engine.Start(53);
+                engine.Start(router, s => Log(s));
                 applied = true;
                 ni.Text = "OVERX Dns - ACTIVE";
                 SendStatusToJs();
