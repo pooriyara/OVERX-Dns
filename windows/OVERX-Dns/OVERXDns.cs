@@ -2018,7 +2018,8 @@ class MainForm : Form
         ServicePointManager.DefaultConnectionLimit = 32;
         ServicePointManager.Expect100Continue = false;
         Application.EnableVisualStyles();
-        Application.Run(new MainForm(Array.IndexOf(args, "--auto") >= 0));
+        // HTML UI is the core design (shared/ui/index.html via WebView2) — use HybridForm as single entry per spec
+        try { Application.Run(new OVERXDnsHybrid.HybridForm()); } catch { Application.Run(new MainForm(Array.IndexOf(args, "--auto") >= 0)); }
         GC.KeepAlive(m);
     }
 }

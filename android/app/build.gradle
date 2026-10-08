@@ -20,7 +20,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig null
+            signingConfig signingConfigs.debug
         }
         debug {
             debuggable true
