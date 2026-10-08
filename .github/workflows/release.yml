@@ -80,7 +80,23 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - run: ls -R artifacts
+      - name: Prepare release files (zip to avoid duplicate names)
+        run: |
+          ls -R artifacts || true
+          # Create zips for Windows publishes (framework-dependent and single-file)
+          if [ -d "artifacts/OVERX-Dns-Windows/win-x64" ]; then
+            (cd artifacts/OVERX-Dns-Windows/win-x64 && zip -r ../../../OVERX-Dns-Windows-win-x64.zip . ) || true
+          fi
+          if [ -d "artifacts/OVERX-Dns-Windows/win-x64-single" ]; then
+            # rename exe to avoid confusion before zipping
+            if [ -f "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX Dns.exe" ]; then
+              mv "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX Dns.exe" "artifacts/OVERX-Dns-Windows/win-x64-single/OVERX-Dns-single.exe" || true
+            fi
+            (cd artifacts/OVERX-Dns-Windows/win-x64-single && zip -r ../../../OVERX-Dns-Windows-single.zip . ) || true
+          fi
+          ls -lh *.zip 2>/dev/null || true
+          ls -R artifacts || true
+      - run: ls -R artifacts; ls -lh *.zip 2>/dev/null || true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -93,6 +109,6 @@ jobs:
             - Shared UI: `shared/ui/index.html` — 4 theme photos full top hero, no toggle bar, ring icon connect (gray when off)
             - Renamed OverlordDns → OVERX Dns (21x)
           files: |
-            artifacts/OVERX-Dns-Windows*/**
-            artifacts/OVERX-Dns-Android*/**
+            OVERX-Dns-Windows-*.zip
+            artifacts/OVERX-Dns-Android/**/*.apk
           generate_release_notes: true
