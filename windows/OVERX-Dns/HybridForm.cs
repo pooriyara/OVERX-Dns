@@ -21,16 +21,10 @@ namespace OVERXDnsHybrid
         public HybridForm()
         {
             Text = "OVERX Dns";
-            ClientSize = new Size(1180, 780);
-            MinimumSize = new Size(1000, 700);
+            ClientSize = new Size(1120, 760);
+            MinimumSize = new Size(980, 680);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.FromArgb(2, 6, 17);
-            // Remove OS chrome (— □ ×) per user request — hide control box, page fuller
-            ControlBox = false;
-            MinimizeBox = false;
-            MaximizeBox = false;
-            FormBorderStyle = FormBorderStyle.Sizable;
-            ShowIcon = true;
 
             // Resolve icon
             try { Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "icon.ico")); } catch {}
